@@ -71,10 +71,10 @@ To send a message:
 
 The server will respond accordingly and display one of the following:
 
-`<sender>: <message>` – message delivered
-`USER NOT FOUND` – recipient does not exist
-`REGISTER FIRST` – client attempted to send a message before registering (should not occur during normal browser usage)
-`INVALID MESSAGE` – malformed MESSAGE command (reserved for non-compliant or malformed clients)
+- `<sender>: <message>` – message delivered
+- `USER NOT FOUND` – recipient does not exist
+- `REGISTER FIRST` – client attempted to send a message before registering (should not occur during normal browser usage)
+- `INVALID MESSAGE` – malformed MESSAGE command (reserved for non-compliant or malformed clients)
 
 **Quitting**
 
