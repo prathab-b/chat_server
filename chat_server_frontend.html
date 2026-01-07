@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat Server</title>
+  <style>
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #36393f; /* Discord dark bg */
+      color: #ddd;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header bar */
+    #header {
+      background: #202225;
+      padding: 15px 20px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      flex-shrink: 0;
+      border-bottom: 1px solid #2f3136;
+    }
+
+    /* Main container: chat + input */
+    #chat-container {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      padding: 10px 20px;
+      background: #2f3136;
+      overflow: hidden;
+    }
+
+    /* Chat messages area */
+    #chat {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Messages style */
+    .my-message {
+      background-color: #5865f2;
+      color: white;
+      padding: 10px 14px;
+      margin: 5px 0;
+      border-radius: 20px 20px 0 20px;
+      max-width: 70%;
+      align-self: flex-end;
+      font-size: 15px;
+      word-wrap: break-word;
+    }
+
+    .incoming-message {
+      background-color: #40444b;
+      color: #ddd;
+      padding: 10px 14px;
+      margin: 5px 0;
+      border-radius: 20px 20px 20px 0;
+      max-width: 70%;
+      align-self: flex-start;
+      font-size: 15px;
+      word-wrap: break-word;
+    }
+
+    .sender {
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    /* Input area at bottom */
+    #input-container {
+      display: flex;
+      padding: 10px 0;
+      gap: 10px;
+      background: #202225;
+      flex-shrink: 0;
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+    }
+
+    #recipient {
+      width: 150px;
+      border-radius: 5px;
+      border: none;
+      padding: 10px;
+      font-size: 14px;
+      background: #40444b;
+      color: #ddd;
+    }
+
+    #input {
+      flex-grow: 1;
+      border-radius: 5px;
+      border: none;
+      padding: 10px;
+      font-size: 14px;
+      background: #40444b;
+      color: #ddd;
+    }
+
+    #send {
+      background: #5865f2;
+      border: none;
+      padding: 0 20px;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    #send:hover {
+      background: #4752c4;
+    }
+
+    /* Scrollbar styling for chat */
+    #chat::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #chat::-webkit-scrollbar-thumb {
+      background: #202225;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header">Chat Server</div>
+
+  <div id="chat-container">
+    <div id="chat"></div>
+
+    <div id="input-container">
+      <input id="recipient" type="text" placeholder="Recipient" />
+      <input id="input" type="text" placeholder="Type your message here..." />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:45291');
+
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const recipientInput = document.getElementById('recipient');
+    const sendBtn = document.getElementById('send');
+
+    socket.onopen = () => {
+      const username = prompt("Enter your username:");
+      socket.send(`JOIN ${username}`);
+    };
+
+    function createMessageElement(sender, message, isOwnMessage) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add(isOwnMessage ? 'my-message' : 'incoming-message');
+
+      const senderSpan = document.createElement('span');
+      senderSpan.textContent = sender + ':';
+      senderSpan.classList.add('sender');
+      msgDiv.appendChild(senderSpan);
+
+      const messageSpan = document.createElement('span');
+      messageSpan.textContent = ' ' + message;
+      msgDiv.appendChild(messageSpan);
+
+      return msgDiv;
+    }
+
+    socket.onmessage = (event) => {
+      const data = event.data;
+      const colonIndex = data.indexOf(':');
+      let sender = "System";
+      let message = data;
+
+      if (colonIndex > -1) {
+        sender = data.substring(0, colonIndex).trim();
+        message = data.substring(colonIndex + 1).trim();
+      }
+
+      const msgElem = createMessageElement(sender, message, false);
+      chat.appendChild(msgElem);
+      chat.scrollTop = chat.scrollHeight;
+    };
+
+    function sendMessage() {
+      const msg = input.value.trim();
+      const recipient = recipientInput.value.trim();
+      if (!msg) return;
+
+      let formattedMessage;
+      if (recipient) {
+        formattedMessage = `MESSAGE ${recipient} ${msg}`;
+      } else {
+        formattedMessage = `BROADCAST ${msg}`;
+      }
+
+      socket.send(formattedMessage);
+
+      const myMsgElem = createMessageElement('You', msg, true);
+      chat.appendChild(myMsgElem);
+      chat.scrollTop = chat.scrollHeight;
+
+      input.value = '';
+    }
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+  </script>
+</body>
+</html>
