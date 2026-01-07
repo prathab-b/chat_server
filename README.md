@@ -6,9 +6,9 @@ A non-blocking, multi-client chat server implemented in C for Linux. The server 
 
 ## Tech Stack
 
-**Language (Server):** C
-**Platform:** Linux
-**Networking:** TCP Sockets
+**Language (Server):** C <br>
+**Platform:** Linux <br>
+**Networking:** TCP Sockets <br>
 **Proxy:** Node.js + WebSockets (ws)
 
 ## Features
